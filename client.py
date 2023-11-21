@@ -17,6 +17,7 @@ from Crypto.Util.Padding import pad, unpad
 def client():
     try:
 
+        #git change evan
         Name = input("Enter the server host or IP: ")
         serverName = '127.0.0.1' if Name.lower() == 'localhost' else Name
         serverPort = 12000
