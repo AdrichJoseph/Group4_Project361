@@ -1,7 +1,7 @@
 from Crypto.PublicKey import RSA  # import RSA key generator from pycryptodome library
 import os
 
-
+#test
 # Create directory for server and client
 def createDirectory():
     server_dir = "./Server"  # path to server directory
