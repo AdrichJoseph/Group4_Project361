@@ -21,13 +21,19 @@ def server():
         serverSocket.bind(('', serverPort))
         serverSocket.listen(5)  # Listen for 5 connections
 
-        #    try:
-        #        connectionSocket, addr = serverSocket.accept()
-        #        connectionSocket.send('Enter your username: '.encode('ascii'))
+        connectionSocket, addr = serverSocket.accept()
+
+        pid = os.fork()
+
+        connectionSocket.send('Enter your username: '.encode('ascii'))
+
+        connectionSocket.recv(2048)
+
+        #decrypt username and password
 
         # menu :
-        #        connectionSocket.send('\nSelect the operation:\n\t1) Create and send an email\n\t2) Display the inbox list\n\t3) Display the email contents\n\t4) Terminate the connection\n\n\tChoice: '.encode(
-        #            'ascii'))
+        connectionSocket.send('\nSelect the operation:\n\t1) Create and send an email\n\t2) Display the inbox list\n\t3) Display the email contents\n\t4) Terminate the connection\n\n\tChoice: '.encode(
+                  'ascii'))
 
         # do we use a dictionary to store the emails? :
         #       emailContents = {}
@@ -41,18 +47,13 @@ def server():
             if message == '1':
                 pass
 
-
-
             # if message == 2 then inbox display is executed
             elif message == '2':
                 pass
 
-
             # if message == 3 then display contents functionality is executed
             elif message == 3:
                 pass
-
-
 
             # Still need to apply encryption later
             elif message == '4':
@@ -67,9 +68,6 @@ def server():
             connectionSocket.send(
                 '\nSelect the operation:\n\t1) Create and send an email\n\t2) Display the inbox list\n\t3) Display the email contents\n\t4) Terminate the connection\n\n\tChoice: '.encode(
                     'ascii'))
-
-
-
 
     except socket.error as e:
         serverSocket.close()
