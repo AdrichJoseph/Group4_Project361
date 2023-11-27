@@ -17,10 +17,15 @@ from Crypto.Util.Padding import pad, unpad
 
 # test
 def client():
+
+    #key = ... key generator
+
+    cipher = AES.new(key, AES.MODE_ECB)
+
     try:
 
-        Name = input("Enter the server host or IP: ")
-        serverName = '127.0.0.1' if Name.lower() == 'localhost' else Name
+        name = input("Enter the IP or name: ")
+        serverName = '127.0.0.1' if name.lower() == 'localhost' else name
         serverPort = 12000
 
         # create the socket and connect to the server
@@ -28,15 +33,27 @@ def client():
         clientSocket.connect((serverName, serverPort))
 
 
-
-
         # while loop for the client side
 
         while True:
 
-            # ask for the client response
-            clientResponse = input()
-            clientSocket.send(clientResponse.encode('ascii'))
+            # recv from username and passward prompt from server
+            inMessage = unpad(cipher.decrypt(clientSocket.recv(2048)), 16).decode('ascii')
+            print(inMessage)
+
+            #get user info
+            username = input()
+            password = input("Enter your password: ")
+
+            #create string to send
+            msg = username + "\n" + password
+
+            #send user info !(Need to add server public key encryption)
+            clientSocket.send(msg.encode('ascii'))
+
+            #Recv and print menu
+            inMessage = unpad(cipher.decrypt(clientSocket.recv(2048)), 16).decode('ascii')
+            print(inMessage)
 
             # if client is = 1 ,create and send email
             if clientResponse == '1':
