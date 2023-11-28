@@ -48,7 +48,7 @@ def decrypt(socket_recv, cipher):
 # ----------
 # dictionary to store the inbox list for each client
 inbox_list = {
-    'client1': [],
+    'client10184': ["hi", "working"],
     'client2': [],
     'client3': [],
     'client4': [],
@@ -169,6 +169,7 @@ def server():
         try:
             # Server accepts client connection
             connectionSocket, addr = serverSocket.accept()
+
             #pid = os.fork()
 
             #windows testing fix:
@@ -195,6 +196,8 @@ def server():
                     ok_message = decrypt(connectionSocket.recv(1024), cipher)
                     print(f"Connection Accepted and Symmetric Key Generated for client: {username}")
 
+                    inbox_list.a
+
                 else:
                     # this runs if the user/pass combo is not in json
                     connectionSocket.send("Invalid username or password".encode("ascii"))
@@ -217,7 +220,7 @@ def server():
                         sendEmailProtocol(connectionSocket, username)
 
                         # -----------
-                    if message == "2": # display inbox list for client
+                    elif message == "2": # display inbox list for client
 
                         inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\tTitle\n"  # Header for inbox list
 
@@ -229,17 +232,13 @@ def server():
                         #---------------
                         #print(message, "worked")
 
-                    if message == "3":
-                        # connectionSocket.send(encrypt("Send the email", cipher))
-                        connectionSocket.send(encrypt("Send the email", cipher))
-                        sendEmailProtocol(connectionSocket, username, cipher)
+                    elif message == "3":
 
-               #     elif message == "2":
-               #         print(message, "worked")
+                        #Send email choice message
+                        connectionSocket.send(encrypt("Enter the email index you wish to view: ", cipher))
 
-                #    elif message == "3":
-
-#                        print(message, "worked")
+                        inboxNum = decrypt(connectionSocket.recv(1024), cipher)
+                        displayEmailContents(inboxNum)
 
                     elif message == "4":
                         print(f"Terminating connection with {username}")
@@ -323,6 +322,14 @@ def sendEmailProtocol(connectionSocket, username):
     
     return None
 
+def displayEmailContents(inboxNum):
+    pid = os.getpid()
 
+    client = "client" + str(pid)
+
+    print(pid)
+    client_email_list = inbox_list.get(client)
+
+    print(client_email_list)
 # -------
 server()

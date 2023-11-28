@@ -117,21 +117,20 @@ def client():
                 inbox_list = decrypt(encrypted_inbox_list, cipher)  # decrypt inbox list
                 print(inbox_list)  # print inbox list
                 # -----
-
                 
             if clientResponse == "3":
-                send_email_string = decrypt(clientSocket.recv(1024), cipher)
-                print(send_email_string)
-                sendEmailProtocol(username, clientSocket, cipher)
-        #    elif clientResponse == "2":
-        #        print(clientResponse, "worked")
-        #    elif clientResponse == "3":
+                #Recv and print the messgae asking for email to display option
+                encrypted_inbox_choice_msg = clientSocket.recv(1024)
+                inbox_choice_msg = decrypt(encrypted_inbox_choice_msg, cipher)
+                print(inbox_choice_msg)
 
-                print(clientResponse, "worked")
+                #Get inbox choice and send it to server
+                inboxNum = input()
+                clientSocket.send(encrypt(inboxNum, cipher))
+
             elif clientResponse == "4":
                 print("The connection is terminated with the server.")
                 break
-
 
             # restart the choice loop
             # menu = decrypt(clientSocket.recv(1024), cipher)
