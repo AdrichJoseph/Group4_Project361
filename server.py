@@ -6,6 +6,7 @@ import socket
 import os
 import glob
 import datetime
+from datetime import datetime
 import json
 import sys
 from Crypto.Cipher import AES, PKCS1_OAEP
@@ -32,7 +33,7 @@ def encrypt_with_client_public_key(username, sym_key):
 
 # Encrypts messages
 def encrypt(message_string, cipher):
-    ct_bytes = cipher.encrypt(pad(message_string.encode('ascii'), 16))
+    ct_bytes = cipher.encrypt(pad(message_string.encode('ascii'), 32))
     return ct_bytes
 
 
@@ -41,6 +42,68 @@ def decrypt(socket_recv, cipher):
     Padded_message = cipher.decrypt(socket_recv)
     unpadded = unpad(Padded_message, 32).decode('ascii')
     return unpadded
+
+def saveEmail(emailTime, destination, username, title):
+    fileName = f"{username}_{title}.txt"
+    pathfileName = os.path.join(f"./{destination}/", fileName)
+    # check if directory exist
+    if not os.path.isdir(destination):
+        os.mkdir(f"./{destination}")
+    emailFile = open(pathfileName, 'w')
+    emailFile.write(emailTime)
+    emailFile.close()
+
+def sendEmailProtocol(connectionSocket, username, cipher):
+    # connectionSocket.send("Send the email".encode('ascii'))
+
+    #receive email
+    # email = connectionSocket.recv(2048).decode('ascii')
+    email = decrypt(connectionSocket.recv(2048), cipher)
+
+    #parse email
+    lines = email.split('\n')
+
+    #if multiple lines for content put it back together
+    if (len(lines) > 6):
+        content = ""
+
+        for i in range(len(lines)):
+
+            if (i > 4):
+                content += lines[i]
+
+                if (i < len(lines) - 1):
+                    content += '\n'
+
+    else:
+        content = lines[5]
+
+    for i in range(4):
+        tokens = lines[i].split(':')
+
+        if (i == 1):
+            destination = tokens[1].replace(' ', '')
+
+        elif (i == 3):
+            length = tokens[1]
+
+    print(f"An email from {username} is sent to {destination} has a content length of{length}")
+    title = lines[2].split(" ")[1]
+    #add time and date to email
+    emailTime = f"{lines[0]}\n{lines[1]}\nTime and Date: {str(datetime.now())}\n{lines[2]}\n{lines[3]}\n{lines[4]}\n{content}"
+    #save emails on destination clients directories
+    #for multiple destinations
+    if (';' in destination):
+        clients = destination.split(';')
+
+        for client in clients:
+            saveEmail(emailTime, client, username, title)
+
+    #for one destination
+    else:
+        saveEmail(emailTime, destination, username, title)
+
+    return None
 
 # Opens connnection to clients and handles the math test
 def server():
@@ -106,15 +169,21 @@ def server():
                 message = decrypt(connectionSocket.recv(1024), cipher)
                 while True:
                     if message == "1":
+                        # connectionSocket.send(encrypt("Send the email", cipher))
+                        connectionSocket.send(encrypt("Send the email", cipher))
+                        sendEmailProtocol(connectionSocket, username, cipher)
+
+                    elif message == "2":
                         print(message, "worked")
-                    if message == "2":
+
+                    elif message == "3":
                         print(message, "worked")
-                    if message == "3":
-                        print(message, "worked")
-                    if message == "4":
+
+                    elif message == "4":
                         print(f"Terminating connection with {username}")
                         break
-                    connectionSocket.send(encrypt(menu, cipher))
+
+                    # connectionSocket.send(encrypt(menu, cipher))
                     message = decrypt(connectionSocket.recv(1024), cipher)
 
                 # restart the choice loop
