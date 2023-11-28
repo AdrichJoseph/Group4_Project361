@@ -46,7 +46,34 @@ def encrypt(message, cipher):
 #Decrypts messages, use this when receiving from server
 def decrypt(socket_recv, cipher):
     Padded_message = cipher.decrypt(socket_recv)
-    return unpad(Padded_message,32).decode('ascii')
+    unpadded = unpad(Padded_message,32).decode('ascii')
+    return unpadded
+
+def sendEmailProtocol(username, clientSocket, cipher):
+
+    destination = input("Enter destinations (separated by ;): ")
+    title = input("Enter title: ")
+    contentType = input("Would you like to load contents from a file? (Y/N) ")
+
+    #message content from a file
+    if (contentType.upper() == 'Y'):
+        fileName = input("Enter filename: ")
+        file = open(fileName, 'r')
+        content = file.read()
+        file.close()
+
+    else:
+        content = input("Enter message contents: ")
+
+    #create email
+    length = len(content)
+    email = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContent:\n{content}"
+    # clientSocket.send(email.encode('ascii'))
+    clientSocket.send(encrypt(email, cipher))
+
+    print("The message is sent to the server.")
+
+    return None
 
 #Connects to the server and handles the math test
 def client():
@@ -86,14 +113,24 @@ def client():
             if clientResponse == "2":
                 print(clientResponse, "worked")
             if clientResponse == "3":
+                send_email_string = decrypt(clientSocket.recv(1024), cipher)
+                print(send_email_string)
+                sendEmailProtocol(username, clientSocket, cipher)
+        #    elif clientResponse == "2":
+        #        print(clientResponse, "worked")
+        #    elif clientResponse == "3":
+
                 print(clientResponse, "worked")
-            if clientResponse == "4":
+            elif clientResponse == "4":
                 print("The connection is terminated with the server.")
                 break
 
+
             # restart the choice loop
+            # menu = decrypt(clientSocket.recv(1024), cipher)
             clientResponse = input(menu)
             clientSocket.send(encrypt(clientResponse, cipher))
+
         # Client terminate connection with the server
         clientSocket.close()
 
