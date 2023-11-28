@@ -110,8 +110,15 @@ def client():
             if clientResponse == "1":
                 #print(clientResponse, "worked")
                 sendEmailProtocol(username, clientSocket)
-            if clientResponse == "2":
-                print(clientResponse, "worked")
+
+                # ----
+            if clientResponse == "2":  # if client response is 2
+                encrypted_inbox_list = clientSocket.recv(1024)  # receive encrypted inbox list
+                inbox_list = decrypt(encrypted_inbox_list, cipher)  # decrypt inbox list
+                print(inbox_list)  # print inbox list
+                # -----
+
+                
             if clientResponse == "3":
                 send_email_string = decrypt(clientSocket.recv(1024), cipher)
                 print(send_email_string)
