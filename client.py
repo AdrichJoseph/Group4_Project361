@@ -108,12 +108,18 @@ def client():
         clientSocket.send(encrypt(clientResponse, cipher))
         while True:
             if clientResponse == "1":
+                #print(clientResponse, "worked")
+                sendEmailProtocol(username, clientSocket)
+            if clientResponse == "2":
+                print(clientResponse, "worked")
+            if clientResponse == "3":
                 send_email_string = decrypt(clientSocket.recv(1024), cipher)
                 print(send_email_string)
                 sendEmailProtocol(username, clientSocket, cipher)
-            elif clientResponse == "2":
-                print(clientResponse, "worked")
-            elif clientResponse == "3":
+        #    elif clientResponse == "2":
+        #        print(clientResponse, "worked")
+        #    elif clientResponse == "3":
+
                 print(clientResponse, "worked")
             elif clientResponse == "4":
                 print("The connection is terminated with the server.")
@@ -133,6 +139,28 @@ def client():
         clientSocket.close()
         sys.exit(1)
 
+def sendEmailProtocol(username, clientSocket):
+    destination = input("Enter destinations (separated by ;): ")
+    title = input("Enter title: ")
+    contentType = input("Would you like to load contents from a file? (Y/N) ")
+
+    #message content from a file
+    if (contentType.upper() == 'Y'):
+        fileName = input("Enter filename: ")
+        file = open(fileName, 'r')
+        content = file.read()
+        file.close()
+    
+    else:
+        content = input("Enter message contents: ")
+
+    #create email
+    length = len(content)
+    email = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContent:\n{content}"
+    clientSocket.send(email.encode('ascii'))
+    print("The message is sent to the server.")
+
+    return None
 
 # ----------
 client()

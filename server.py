@@ -5,7 +5,7 @@
 import socket
 import os
 import glob
-import datetime
+#import datetime
 from datetime import datetime
 import json
 import sys
@@ -169,15 +169,21 @@ def server():
                 message = decrypt(connectionSocket.recv(1024), cipher)
                 while True:
                     if message == "1":
+                        #print(message, "worked")
+                        sendEmailProtocol(connectionSocket, username)
+                    if message == "2":
+                        print(message, "worked")
+                    if message == "3":
                         # connectionSocket.send(encrypt("Send the email", cipher))
                         connectionSocket.send(encrypt("Send the email", cipher))
                         sendEmailProtocol(connectionSocket, username, cipher)
 
-                    elif message == "2":
-                        print(message, "worked")
+               #     elif message == "2":
+               #         print(message, "worked")
 
-                    elif message == "3":
-                        print(message, "worked")
+                #    elif message == "3":
+
+#                        print(message, "worked")
 
                     elif message == "4":
                         print(f"Terminating connection with {username}")
@@ -198,6 +204,68 @@ def server():
             print('Goodbye')
             serverSocket.close()
             sys.exit(0)
+
+#helper function for send email protocol
+def saveEmail(emailTime, destination, username):
+    fileName = f"{username}_{destination}.txt"
+    pathfileName = os.path.join(f"./{destination}/", fileName)
+
+    emailFile = open(pathfileName, 'w')
+    emailFile.write(emailTime)
+    emailFile.close()
+
+def sendEmailProtocol(connectionSocket, username):
+    sendMsg = "Send the email"
+    connectionSocket.send(sendMsg.encode('ascii'))
+
+    #receive email
+    email = connectionSocket.recv(2048).decode('ascii')
+                    
+    #parse email
+    lines = email.split('\n')
+
+    #if multiple lines for content put it back together
+    if (len(lines) > 6):
+        content = ""
+        
+        for i in range(len(lines)):
+
+            if (i > 4):
+                content += lines[i]
+            
+                if (i < len(lines) - 1):
+                    content += '\n'
+    
+    else:
+        content = lines[5]
+
+    for i in range(4):
+        tokens = lines[i].split(':')
+
+        if (i == 1):
+            destination = tokens[1].replace(' ', '')
+        
+        elif (i == 3):
+            length = tokens[1]
+    
+    print(f"An email from {username} is sent to {destination} has a content length of{length}")
+
+    #add time and date to email
+    emailTime = f"{lines[0]}\n{lines[1]}\nTime and Date: {str(datetime.now())}\n{lines[2]}\n{lines[3]}\n{lines[4]}\n{content}"
+
+    #save emails on destination clients directories
+    #for multiple destinations
+    if (';' in destination):
+        clients = destination.split(';')
+
+        for client in clients:
+            saveEmail(emailTime, client, username)
+
+    #for one destination
+    else:
+        saveEmail(emailTime, destination, username)
+    
+    return None
 
 
 # -------
