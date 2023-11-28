@@ -60,8 +60,6 @@ def client():
                 pass
 
 
-
-
             # when user choose 2 print list of emails
 
             elif clientResponse == '2':
