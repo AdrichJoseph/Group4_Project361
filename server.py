@@ -133,7 +133,11 @@ def server():
         try:
             # Server accepts client connection
             connectionSocket, addr = serverSocket.accept()
-            pid = os.fork()
+            #pid = os.fork()
+
+            #windows testing fix:
+            pid =0
+
             with open("user_pass.json", 'r') as file:
                 user_pass_dict = json.load(file)
 
@@ -164,9 +168,13 @@ def server():
                     return
 
                 menu = 'Select the operation:\n\t1) Create and send an email\n\t2) Display the inbox list\n\t3) Display the email contents\n\t4) Terminate the connection\n\n\tChoice: '
-                #
+
+                #send menu to client
                 connectionSocket.send(encrypt(menu, cipher))
+
+                #Get menu choice from client
                 message = decrypt(connectionSocket.recv(1024), cipher)
+
                 while True:
                     if message == "1":
                         #print(message, "worked")
