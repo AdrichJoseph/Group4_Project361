@@ -43,6 +43,21 @@ def decrypt(socket_recv, cipher):
     unpadded = unpad(Padded_message, 32).decode('ascii')
     return unpadded
 
+
+
+# ----------
+# dictionary to store the inbox list for each client
+inbox_list = {
+    'client1': [],
+    'client2': [],
+    'client3': [],
+    'client4': [],
+    'client5': []
+}
+# ----------
+
+
+# we have 2 save email
 def saveEmail(emailTime, destination, username, title):
     fileName = f"{username}_{title}.txt"
     pathfileName = os.path.join(f"./{destination}/", fileName)
@@ -52,6 +67,27 @@ def saveEmail(emailTime, destination, username, title):
     emailFile = open(pathfileName, 'w')
     emailFile.write(emailTime)
     emailFile.close()
+
+# -------- 
+
+    # update the inbox list for the client
+    if destination not in inbox_list:
+        inbox_list[destination] = []
+    index = len(inbox_list[destination]) + 1    # index of the email
+
+    # get the current date and time and format it
+    formatted_date =  str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    # add the email information to the inbox list
+    inbox_list[destination].append({
+        'index': index,
+        'client': username,
+        'DateTime': formatted_date,
+        'Title': title
+    })
+
+# -------
+
 
 def sendEmailProtocol(connectionSocket, username, cipher):
     # connectionSocket.send("Send the email".encode('ascii'))
@@ -179,8 +215,20 @@ def server():
                     if message == "1":
                         #print(message, "worked")
                         sendEmailProtocol(connectionSocket, username)
-                    if message == "2":
-                        print(message, "worked")
+
+                        # -----------
+                    if message == "2": # display inbox list for client
+
+                        inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\tTitle\n"  # Header for inbox list
+
+                        for email in inbox_list.get(username, []):
+                            inbox_list_str += f"{email['index']}\t\t{email['client']}\t\t{email['DateTime']}\t\t{email['Title']}\n"
+
+                        connectionSocket.send(encrypt(inbox_list, cipher))
+                        
+                        #---------------
+                        #print(message, "worked")
+
                     if message == "3":
                         # connectionSocket.send(encrypt("Send the email", cipher))
                         connectionSocket.send(encrypt("Send the email", cipher))
