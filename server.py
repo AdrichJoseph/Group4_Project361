@@ -235,12 +235,12 @@ def server():
                     elif message == "3":
 
                         #Send email choice message
-                        connectionSocket.send(encrypt("Enter the email index you wish to view: ", cipher))
+                        connectionSocket.send(encrypt("the server request email index", cipher))
 
                         inboxNum = decrypt(connectionSocket.recv(1024), cipher)
                         displayEmailContents(inboxNum)
 
-                    elif message == "4":
+                    else:
                         print(f"Terminating connection with {username}")
                         break
 
@@ -329,6 +329,9 @@ def displayEmailContents(inboxNum):
 
     print(pid)
     client_email_list = inbox_list.get(client)
+
+    email = client_email_list[inboxNum]
+
 
     print(client_email_list)
 # -------

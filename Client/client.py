@@ -125,11 +125,11 @@ def client():
             if clientResponse == "3":
                 #Recv and print the messgae asking for email to display option
                 encrypted_inbox_choice_msg = clientSocket.recv(1024)
-
-                #inbox_choice_msg = decrypt(encrypted_inbox_choice_msg, cipher)
+                inbox_choice_msg = decrypt(encrypted_inbox_choice_msg, cipher)
+                print(inbox_choice_msg)
 
                 #Get inbox choice and send it to server
-                inboxNum = input("Enter the email index you wish to view: ")
+                inboxNum = input()
                 clientSocket.send(encrypt(inboxNum, cipher))
 
 
@@ -174,7 +174,6 @@ def sendEmailProtocol(username, clientSocket):
     return None
 
 def displayEmailContents():
-    var = 1+1
 
 # ----------
 client()
