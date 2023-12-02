@@ -73,7 +73,7 @@ def sendEmailProtocol(username, clientSocket, cipher):
 
     #create email
     length = len(content)
-    email = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContent:\n{content}"
+    email = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContents:\n{content}"
     # clientSocket.send(email.encode('ascii'))
     clientSocket.send(encrypt(email, cipher))
 
@@ -81,11 +81,10 @@ def sendEmailProtocol(username, clientSocket, cipher):
 
     return None
 
-#Connects to the server and handles the math test
+#Connects to the server and email system
 def client():
-    # serverInput = input("Enter the server host name or IP: ")
-    # serverName = serverInput
-    serverName = "localhost"  # will fix this later just makes it easier for testing
+    serverInput = input("Enter the server host name or IP: ")
+    serverName = serverInput
     # Server Information
     serverPort = 13000
 
@@ -125,12 +124,13 @@ def client():
 
                 
             if clientResponse == "3":
-                send_email_string = decrypt(clientSocket.recv(1024), cipher)
-                print(send_email_string)
-                sendEmailProtocol(username, clientSocket, cipher)
+                whichIndexString = decrypt(clientSocket.recv(1024), cipher)
+                index = input(whichIndexString)
+                clientSocket.send(encrypt(index, cipher))
+                #prints the email contents
+                print("\n", decrypt(clientSocket.recv(2048), cipher), "\n")
 
 
-                print(clientResponse, "worked")
             elif clientResponse == "4":
                 print("The connection is terminated with the server.")
                 break

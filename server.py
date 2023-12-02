@@ -4,8 +4,6 @@
 
 import socket
 import os
-import glob
-#import datetime
 from datetime import datetime
 import json
 import sys
@@ -30,13 +28,6 @@ def encrypt_with_client_public_key(username, sym_key):
     cipher = PKCS1_OAEP.new(rsa_key)
     return cipher.encrypt(sym_key)
 
-# Encrypts messages
-#def encrypt(message_string, cipher):
-#    ct_bytes = cipher.encrypt(pad(message_string.encode('ascii'), 32))
-#    return ct_bytes
-
-
-
 
 def encrypt(message_string, cipher):
     ct_bytes = cipher.encrypt(pad(message_string.encode('ascii'), 16))
@@ -49,51 +40,6 @@ def decrypt(socket_recv, cipher):
     unpadded = unpad(Padded_message, 16).decode('ascii')
     return unpadded
 
-#Decrypts messages
-#def decrypt(socket_recv, cipher):
-#    Padded_message = cipher.decrypt(socket_recv)
-#    unpadded = unpad(Padded_message, 32).decode('ascii')
-#    return unpadded
-
-
-#def decrypt(socket_recv, cipher):
- #   Padded_message = cipher.decrypt(socket_recv)
-    # Check if the decrypted message is empty before attempting to unpad
-  #  if not Padded_message:
-   #     return ""
-    #unpadded = unpad(Padded_message, 32).decode('ascii')
-    #return unpadded
-
-
-
-# ----------
-# dictionary to store the inbox list for each client
-
-#inbox_list = {
-#    'client1': [],
-#    'client2': [],
-#    'client3': [],
-#    'client4': [],
-#    'client5': []
-#}
-
-# ----------
-#def saveEmail(emailTime, destination, username, title):
- #   fileName = f"{username}_{destination}.json"
-  #  pathfileName = os.path.join(f"./{destination}/", fileName)
-
-   # email_data = {
-    #    'index': get_next_index(destination),  # You need to implement a function to get the next index
-     #   'sender': username,
-      #  'datetime': str(datetime.now()),
-       # 'title': title,
-    #    'content': emailTime
-    #}
-
-    #with open(pathfileName, 'w') as emailFile:
-     #   json.dump(email_data, emailFile)
-
-
 
 # we have 2 save email
 def saveEmail(emailTime, destination, username, title):
@@ -105,26 +51,8 @@ def saveEmail(emailTime, destination, username, title):
     emailFile = open(pathfileName, 'w')
     emailFile.write(emailTime)
     emailFile.close()
-# --------
-    # update the inbox list for the client
- #   if destination not in inbox_list:
-  #      inbox_list[destination] = []
-  #  index = len(inbox_list[destination]) + 1    # index of the email
 
-    # get the current date and time and format it
-   # formatted_date =  str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    # add the email information to the inbox list
-    #inbox_list[destination].append({
-     #   'index': index,
-      #  'client': username,
-       # 'DateTime': formatted_date,
-        #'Title': title
-   # })
-# -------
-
-
-def sendEmailProtocol(connectionSocket, username, cipher):
+def sendEmailProtocol(connectionSocket, username, cipher, emailDatabase):
     connectionSocket.send(encrypt("Send the email", cipher))
 
     #receive email
@@ -133,7 +61,7 @@ def sendEmailProtocol(connectionSocket, username, cipher):
 
     #parse email
     lines = email.split('\n')
-
+    # addToDatabase(lines, date)
     #if multiple lines for content put it back together
     if (len(lines) > 6):
         content = ""
@@ -174,13 +102,36 @@ def sendEmailProtocol(connectionSocket, username, cipher):
     else:
         saveEmail(emailTime, destination, username, title)
 
+    # add to emailDatabase dictionary
+    if destination in emailDatabase:
+        emailDatabase[destination].append(emailTime)
+    else:
+        emailDatabase[destination] = [emailTime]
+
     return None
 
-# Opens connnection to clients and handles the math test
+def displayInbox(username):
+    inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\t\t\tTitle\n"  # Header for inbox list
+
+    directory = f"./{username}/"
+    index = 0
+    for filename in os.listdir(directory):
+        if filename.endswith(".txt"):
+            index += 1
+            file_path = os.path.join(directory, filename)
+            with open(file_path, 'r') as email:
+                email_from = email.readline().split(" ")[1].replace("\n", "")
+                to = email.readline()
+                date = email.readline().split(": ")[1].replace("\n", "")
+                title = email.readline().split(" ")[1].replace("\n", "")
+                inbox_list_str += f"{index}\t\t\t{email_from}\t\t{date}\t\t{title}\n"
+    return inbox_list_str
+
+# Opens connnection to clients and handles email system
 def server():
     # Server port
+    emailDatabase = {}
     serverPort = 13000
-
     # Create server socket that uses IPv4 and TCP protocols
     try:
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -242,36 +193,34 @@ def server():
                 while True:
                     if message == "1":
                         #print(message, "worked")
-                        sendEmailProtocol(connectionSocket, username, cipher)
+                        sendEmailProtocol(connectionSocket, username, cipher, emailDatabase)
 
                         # -----------
 
                     if message == "2":
-                        inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\t\t\tTitle\n"  # Header for inbox list
-
-                        directory = f"./{username}/"
-                        index = 0
-                        for filename in os.listdir(directory):
-                            if filename.endswith(".txt"):
-                                index += 1
-                                file_path = os.path.join(directory, filename)
-                                with open(file_path, 'r') as email:
-                                    email_from = email.readline().split(" ")[1].replace("\n", "")
-                                    to = email.readline()
-                                    date = email.readline().split(": ")[1].replace("\n", "")
-                                    title = email.readline().split(" ")[1].replace("\n", "")
-                                    inbox_list_str += f"{index}\t\t\t{email_from}\t\t{date}\t\t{title}\n"
-
-                        print(inbox_list_str)
+                        inbox_list_str = displayInbox(username)
                         connectionSocket.send(encrypt(inbox_list_str, cipher))
 
                         #print(message, "worked")
 
                     if message == "3":
-                        # connectionSocket.send(encrypt("Send the email", cipher))
-                        connectionSocket.send(encrypt("Send the email", cipher))
-                        sendEmailProtocol(connectionSocket, username, cipher)
+                        connectionSocket.send(encrypt("Enter the email index you wish to view: ", cipher))
+                        # Grabs the index
+                        index = int(decrypt(connectionSocket.recv(1024), cipher))
+                        # grabs the chosen email by the user
+                        chosenEmail = displayInbox(username).split("\n")[index].split("\t")
+                        emailFrom = chosenEmail[3]
+                        title = chosenEmail[7]
+                        fileName = f"./{username}/{emailFrom}_{title}.txt"
+                        emailContents = ""
+                        # opens the text file and grabs email contents
+                        with open(fileName, 'r') as email:
+                            tmp = email.readline()
+                            while tmp:
+                                emailContents += tmp
+                                tmp = email.readline()
 
+                        connectionSocket.send(encrypt(emailContents, cipher))
            
 
                     elif message == "4":
@@ -293,6 +242,7 @@ def server():
             print('Goodbye')
             serverSocket.close()
             sys.exit(0)
+
 
 
 
