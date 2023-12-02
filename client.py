@@ -38,19 +38,25 @@ def decrypt_with_client_key(username, encryped_sym_key, clientSocket):
         sys.exit(0)
 
 
-# Encrypts messages
-def encrypt(message, cipher):
-    ct_bytes = cipher.encrypt(pad(message.encode('ascii'), 32))
+
+# ...
+
+def encrypt(message_string, cipher):
+    ct_bytes = cipher.encrypt(pad(message_string.encode('ascii'), 16))
     return ct_bytes
 
-#Decrypts messages, use this when receiving from server
 def decrypt(socket_recv, cipher):
-    Padded_message = cipher.decrypt(socket_recv)
-    unpadded = unpad(Padded_message,32).decode('ascii')
+    Padded_message = cipher.decrypt(socket_recv)    # error here
+    if not Padded_message:
+        return ""
+    unpadded = unpad(Padded_message, 16).decode('ascii')
     return unpadded
 
-def sendEmailProtocol(username, clientSocket, cipher):
 
+
+def sendEmailProtocol(username, clientSocket, cipher):
+    send_the_email_string = decrypt(clientSocket.recv(1024), cipher)
+    print(send_the_email_string)
     destination = input("Enter destinations (separated by ;): ")
     title = input("Enter title: ")
     contentType = input("Would you like to load contents from a file? (Y/N) ")
@@ -67,7 +73,7 @@ def sendEmailProtocol(username, clientSocket, cipher):
 
     #create email
     length = len(content)
-    email = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContent:\n{content}"
+    email = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContents:\n{content}"
     # clientSocket.send(email.encode('ascii'))
     clientSocket.send(encrypt(email, cipher))
 
@@ -75,11 +81,10 @@ def sendEmailProtocol(username, clientSocket, cipher):
 
     return None
 
-#Connects to the server and handles the math test
+#Connects to the server and email system
 def client():
-    # serverInput = input("Enter the server host name or IP: ")
-    # serverName = serverInput
-    serverName = "localhost"  # will fix this later just makes it easier for testing
+    serverInput = input("Enter the server host name or IP: ")
+    serverName = serverInput
     # Server Information
     serverPort = 13000
 
@@ -109,25 +114,23 @@ def client():
         while True:
             if clientResponse == "1":
                 #print(clientResponse, "worked")
-                sendEmailProtocol(username, clientSocket)
+                sendEmailProtocol(username, clientSocket, cipher)
 
-                # ----
+
             if clientResponse == "2":  # if client response is 2
                 encrypted_inbox_list = clientSocket.recv(1024)  # receive encrypted inbox list
-                inbox_list = decrypt(encrypted_inbox_list, cipher)  # decrypt inbox list
+                inbox_list = decrypt(encrypted_inbox_list, cipher)  # error here
                 print(inbox_list)  # print inbox list
-                # -----
 
                 
             if clientResponse == "3":
-                send_email_string = decrypt(clientSocket.recv(1024), cipher)
-                print(send_email_string)
-                sendEmailProtocol(username, clientSocket, cipher)
-        #    elif clientResponse == "2":
-        #        print(clientResponse, "worked")
-        #    elif clientResponse == "3":
+                whichIndexString = decrypt(clientSocket.recv(1024), cipher)
+                index = input(whichIndexString)
+                clientSocket.send(encrypt(index, cipher))
+                #prints the email contents
+                print("\n", decrypt(clientSocket.recv(2048), cipher), "\n")
 
-                print(clientResponse, "worked")
+
             elif clientResponse == "4":
                 print("The connection is terminated with the server.")
                 break
@@ -146,28 +149,9 @@ def client():
         clientSocket.close()
         sys.exit(1)
 
-def sendEmailProtocol(username, clientSocket):
-    destination = input("Enter destinations (separated by ;): ")
-    title = input("Enter title: ")
-    contentType = input("Would you like to load contents from a file? (Y/N) ")
-
-    #message content from a file
-    if (contentType.upper() == 'Y'):
-        fileName = input("Enter filename: ")
-        file = open(fileName, 'r')
-        content = file.read()
-        file.close()
-    
-    else:
-        content = input("Enter message contents: ")
-
-    #create email
-    length = len(content)
-    email = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContent:\n{content}"
-    clientSocket.send(email.encode('ascii'))
-    print("The message is sent to the server.")
-
-    return None
-
 # ----------
 client()
+
+
+
+
