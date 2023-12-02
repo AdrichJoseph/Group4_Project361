@@ -247,15 +247,20 @@ def server():
                         # -----------
 
                     if message == "2":
-                        inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\tTitle\n"  # Header for inbox list
+                        inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\t\t\tTitle\n"  # Header for inbox list
 
                         directory = f"./{username}/"
+                        index = 0
                         for filename in os.listdir(directory):
                             if filename.endswith(".txt"):
+                                index += 1
                                 file_path = os.path.join(directory, filename)
                                 with open(file_path, 'r') as email:
-                                    lines = email.readlines()
-                                    inbox_list_str += f"{lines[0]}\t{lines[1]}\t{lines[2]}\t{lines[3]}\n"
+                                    email_from = email.readline().split(" ")[1].replace("\n", "")
+                                    to = email.readline()
+                                    date = email.readline().split(": ")[1].replace("\n", "")
+                                    title = email.readline().split(" ")[1].replace("\n", "")
+                                    inbox_list_str += f"{index}\t\t\t{email_from}\t\t{date}\t\t{title}\n"
 
                         print(inbox_list_str)
                         connectionSocket.send(encrypt(inbox_list_str, cipher))
