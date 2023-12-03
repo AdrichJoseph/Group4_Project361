@@ -1,4 +1,11 @@
-# Ayub, Christine, Evan, Kipp
+"""
+Server Program for Secure Email Transfer.
+
+This program performs the subprotocols for secure email transfer which includes sending the emails as specified by the client, 
+and retrieving the inbox and emails of the client. Encryption and decryption is used for the security of the emails.
+
+Author: Group 4 (Ayub Aden, Kipp Joseph, Evan White, Christine Kim)
+"""
 
 # Goal:
 
@@ -13,7 +20,6 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
 
-
 def decrypt_user_pass_message(encrypted_msg):
     dec_key = RSA.importKey(open('server_private.pem', "rb").read())
     cipher2 = PKCS1_OAEP.new(dec_key)
@@ -23,7 +29,6 @@ def decrypt_user_pass_message(encrypted_msg):
 def generate_sym_key():
     sym_key = get_random_bytes(int(256/8))
     return sym_key
-
 
 def encrypt_with_client_public_key(username, sym_key):
     rsa_key = RSA.importKey(open(f'{username}_public.pem', "rb").read())
@@ -41,7 +46,20 @@ def decrypt(socket_recv, cipher):
     unpadded = unpad(Padded_message, 16).decode('ascii')
     return unpadded
 
-# Saves the email to the clients inbox/directory
+"""
+This is a helper method for the sendEmailProtocol method in which an email is saved into a text file
+within the directory of the destination client.
+
+Parameters:
+emailTime: string
+            email message which also includes the time and date the message as received
+destination: string
+            name of the destination client
+username: string
+            username of the client accessing the program
+title: string
+        title of the email
+"""
 def saveEmail(emailTime, destination, username, title):
     fileName = f"{username}_{title}.txt"
     pathfileName = os.path.join(f"./{destination}/", fileName)
@@ -52,10 +70,25 @@ def saveEmail(emailTime, destination, username, title):
     emailFile.write(emailTime)
     emailFile.close()
 
+"""
+This performs the sending email subprotocol in which the server receives the email from the client
+and saves it into the directory/directories of the destination client(s).
+
+Parameters:
+connectionSocket: socket
+            socket used to connect with client
+username: string
+            username of the client accessing the program
+cipher:
+            cipher used for encryption and decryption
+
+Returns:
+    None
+
+"""
 def sendEmailProtocol(connectionSocket, username, cipher):
     connectionSocket.send(encrypt("Send the email", cipher))
     #receive email info
-    # email = connectionSocket.recv(2048).decode('ascii')
     emailInfo = decrypt(connectionSocket.recv(2048), cipher)
 
     #parse email info
