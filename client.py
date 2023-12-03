@@ -56,7 +56,7 @@ def decrypt(socket_recv, cipher):
 
 def sendEmailProtocol(username, clientSocket, cipher):
     send_the_email_string = decrypt(clientSocket.recv(1024), cipher)
-    print(send_the_email_string)
+    #print(send_the_email_string)
     destination = input("Enter destinations (separated by ;): ")
     title = input("Enter title: ")
     contentType = input("Would you like to load contents from a file? (Y/N) ")
@@ -66,6 +66,7 @@ def sendEmailProtocol(username, clientSocket, cipher):
         fileName = input("Enter filename: ")
         file = open(fileName, 'r')
         content = file.read()
+        
         file.close()
 
     else:
@@ -73,9 +74,13 @@ def sendEmailProtocol(username, clientSocket, cipher):
 
     #create email
     length = len(content)
-    email = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContents:\n{content}"
+    emailInfo = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContents:\n"
     # clientSocket.send(email.encode('ascii'))
-    clientSocket.send(encrypt(email, cipher))
+    clientSocket.send(encrypt(emailInfo, cipher))
+
+    #send content separately
+    for i in range(0, length, 2047):
+        clientSocket.send(encrypt(str(content[i:i+2047]), cipher))
 
     print("The message is sent to the server.")
 
