@@ -54,27 +54,14 @@ def saveEmail(emailTime, destination, username, title):
 def sendEmailProtocol(connectionSocket, username, cipher, emailDatabase):
     connectionSocket.send(encrypt("Send the email", cipher))
 
-    #receive email
+    #receive email info
     # email = connectionSocket.recv(2048).decode('ascii')
-    email = decrypt(connectionSocket.recv(2048), cipher)
+    emailInfo = decrypt(connectionSocket.recv(2048), cipher)
 
-    #parse email
-    lines = email.split('\n')
+    #parse email info
+    lines = emailInfo.split('\n')
+
     # addToDatabase(lines, date)
-    #if multiple lines for content put it back together
-    if (len(lines) > 6):
-        content = ""
-
-        for i in range(len(lines)):
-
-            if (i > 4):
-                content += lines[i]
-
-                if (i < len(lines) - 1):
-                    content += '\n'
-
-    else:
-        content = lines[5]
 
     for i in range(4):
         tokens = lines[i].split(':')
@@ -87,8 +74,15 @@ def sendEmailProtocol(connectionSocket, username, cipher, emailDatabase):
 
     print(f"An email from {username} is sent to {destination} has a content length of{length}")
     title = lines[2].split(" ")[1]
+
+    #receive content
+    content = ""
+    while (len(content) < int(length)):
+        content += decrypt(connectionSocket.recv(2048), cipher)
+        
     #add time and date to email
     emailTime = f"{lines[0]}\n{lines[1]}\nTime and Date: {str(datetime.now())}\n{lines[2]}\n{lines[3]}\n{lines[4]}\n{content}"
+    
     #save emails on destination clients directories
     #for multiple destinations
     if (';' in destination):
