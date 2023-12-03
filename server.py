@@ -71,6 +71,10 @@ def sendEmailProtocol(connectionSocket, username, cipher):
     print(f"An email from {username} is sent to {destination} has a content length of{length}")
     title = lines[2].split(" ")[1]
 
+    if (length > 1000000) or (title > 100):
+        print("Rejected: Maximum Character limit exceeded")
+        return None
+
     #receive content
     content = ""
     while (len(content) < int(length)):
@@ -143,6 +147,7 @@ def server():
             # Server accepts client connection
             connectionSocket, addr = serverSocket.accept()
             pid = os.fork()
+            #pid = 0
             with open("user_pass.json", 'r') as file:
                 user_pass_dict = json.load(file)
 
