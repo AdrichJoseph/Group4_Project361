@@ -154,6 +154,7 @@ def server():
             # Server accepts client connection
             connectionSocket, addr = serverSocket.accept()
             pid = os.fork()
+            #pid = 0
             with open("user_pass.json", 'r') as file:
                 user_pass_dict = json.load(file)
 
