@@ -38,9 +38,6 @@ def decrypt_with_client_key(username, encryped_sym_key, clientSocket):
         sys.exit(0)
 
 
-
-# ...
-
 def encrypt(message_string, cipher):
     ct_bytes = cipher.encrypt(pad(message_string.encode('ascii'), 16))
     return ct_bytes
@@ -66,7 +63,7 @@ def sendEmailProtocol(username, clientSocket, cipher):
         fileName = input("Enter filename: ")
         file = open(fileName, 'r')
         content = file.read()
-        
+
         file.close()
 
     else:
@@ -127,22 +124,23 @@ def client():
                 inbox_list = decrypt(encrypted_inbox_list, cipher)  # error here
                 print(inbox_list)  # print inbox list
 
-                
+
             if clientResponse == "3":
                 whichIndexString = decrypt(clientSocket.recv(1024), cipher)
                 index = input(whichIndexString)
                 clientSocket.send(encrypt(index, cipher))
-                #prints the email contents
-                print("\n", decrypt(clientSocket.recv(2048), cipher), "\n")
-
+                size = decrypt(clientSocket.recv(2048), cipher)
+                print(size)
+                content = ""
+                while (len(content) < int(size)):
+                    content += decrypt(clientSocket.recv(2048), cipher)
+                print(content, "\n")
 
             elif clientResponse == "4":
                 print("The connection is terminated with the server.")
                 break
 
-
             # restart the choice loop
-            # menu = decrypt(clientSocket.recv(1024), cipher)
             clientResponse = input(menu)
             clientSocket.send(encrypt(clientResponse, cipher))
 
