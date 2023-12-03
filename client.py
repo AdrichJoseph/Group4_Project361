@@ -1,4 +1,11 @@
-# Ayub, Christine, Evan, Kipp
+"""
+Client Application for Secure Email Transfer.
+
+This program allows a known client to send emails to other clients, access their own inbox, and view emails. 
+Encryption and decryption is used to secure the emails.
+
+Author: Group 4 (Ayub Aden, Kipp Joseph, Evan White, Christine Kim)
+"""
 
 # Goal:
 
@@ -11,7 +18,6 @@ import sys
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from Crypto.Util.Padding import pad, unpad
-
 
 
 # Encrypts the user and pass string (msg) with the server public key and prepares it to be sent using
@@ -49,11 +55,24 @@ def decrypt(socket_recv, cipher):
     unpadded = unpad(Padded_message, 16).decode('ascii')
     return unpadded
 
+"""
+    This performs the send email subprotocol in which it asks the user for the destination(s) and message content
+    for the email. The user may choose to enter the message content through the terminal or from a text file.
 
+    Parameters:
+    username: string
+                username of the client accessing the client program
+    clientSocket: socket
+                socket used to connect with server
+    cipher: 
+                cipher used for encryption and decryption
+    
+    Returns:
+    None
 
+"""
 def sendEmailProtocol(username, clientSocket, cipher):
     send_the_email_string = decrypt(clientSocket.recv(1024), cipher)
-    #print(send_the_email_string)
     destination = input("Enter destinations (separated by ;): ")
 
     while 1:
@@ -133,7 +152,6 @@ def client():
         clientSocket.send(encrypt(clientResponse, cipher))
         while True:
             if clientResponse == "1":
-                #print(clientResponse, "worked")
                 sendEmailProtocol(username, clientSocket, cipher)
 
 
