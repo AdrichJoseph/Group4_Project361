@@ -41,7 +41,6 @@ def decrypt(socket_recv, cipher):
     return unpadded
 
 
-# we have 2 save email
 def saveEmail(emailTime, destination, username, title):
     fileName = f"{username}_{title}.txt"
     pathfileName = os.path.join(f"./{destination}/", fileName)
@@ -198,10 +197,24 @@ def server():
                         # -----------
 
                     if message == "2":
-                        inbox_list_str = displayInbox(username)
-                        connectionSocket.send(encrypt(inbox_list_str, cipher))
+                        inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\t\t\tTitle\n"  # Header for inbox list
 
-                        #print(message, "worked")
+                        directory = f"./{username}/"
+                        index = 0
+                        for filename in os.listdir(directory):
+                            if filename.endswith(".txt"):
+                                index += 1
+                                file_path = os.path.join(directory, filename)
+                                with open(file_path, 'r') as email:
+                                    email_from = email.readline().split(" ")[1].replace("\n", "")
+                                    to = email.readline()
+                                    date = email.readline().split(": ")[1].replace("\n", "")
+                                    title = email.readline().split(" ")[1].replace("\n", "")
+                                    inbox_list_str += f"{index}\t\t\t{email_from}\t\t{date}\t\t{title}\n"
+
+                        encrypted_inbox_list = encrypt(inbox_list_str, cipher)
+                        connectionSocket.send(encrypted_inbox_list)
+
 
                     if message == "3":
                         connectionSocket.send(encrypt("Enter the email index you wish to view: ", cipher))
