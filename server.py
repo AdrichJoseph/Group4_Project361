@@ -75,6 +75,10 @@ def sendEmailProtocol(connectionSocket, username, cipher, emailDatabase):
     print(f"An email from {username} is sent to {destination} has a content length of{length}")
     title = lines[2].split(" ")[1]
 
+    if (length > 1000000) or (title > 100):
+        print("Rejected: Maximum Character limit exceeded")
+        return None
+
     #receive content
     content = ""
     while (len(content) < int(length)):

@@ -58,22 +58,39 @@ def sendEmailProtocol(username, clientSocket, cipher):
     send_the_email_string = decrypt(clientSocket.recv(1024), cipher)
     #print(send_the_email_string)
     destination = input("Enter destinations (separated by ;): ")
-    title = input("Enter title: ")
+
+    while 1:
+        title = input("Enter title: ")
+
+        #title length checker
+        if len(title) <= 100:
+            break
+        else:
+            print("Error: exceeded maximum character limit of 100, please try again:")
+
     contentType = input("Would you like to load contents from a file? (Y/N) ")
 
-    #message content from a file
-    if (contentType.upper() == 'Y'):
-        fileName = input("Enter filename: ")
-        file = open(fileName, 'r')
-        content = file.read()
-        
-        file.close()
+    while 1:
+        #message content from a file
+        if (contentType.upper() == 'Y'):
+            fileName = input("Enter filename: ")
+            file = open(fileName, 'r')
+            content = file.read()
 
-    else:
-        content = input("Enter message contents: ")
+            file.close()
+
+        else:
+            content = input("Enter message contents: ")
+
+        length = len(content)
+
+        #Content length check
+        if length <= 1000000:
+            break
+        else:
+            print("Error: exceeded maximum character limit of 1,000,000, please try again:")
 
     #create email
-    length = len(content)
     emailInfo = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContents:\n"
     # clientSocket.send(email.encode('ascii'))
     clientSocket.send(encrypt(emailInfo, cipher))
