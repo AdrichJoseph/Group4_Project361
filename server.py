@@ -12,6 +12,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
+
+
 def decrypt_user_pass_message(encrypted_msg):
     dec_key = RSA.importKey(open('server_private.pem', "rb").read())
     cipher2 = PKCS1_OAEP.new(dec_key)
