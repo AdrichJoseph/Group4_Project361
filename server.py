@@ -28,7 +28,6 @@ def encrypt_with_client_public_key(username, sym_key):
     cipher = PKCS1_OAEP.new(rsa_key)
     return cipher.encrypt(sym_key)
 
-
 def encrypt(message_string, cipher):
     ct_bytes = cipher.encrypt(pad(message_string.encode('ascii'), 16))
     return ct_bytes
@@ -40,7 +39,7 @@ def decrypt(socket_recv, cipher):
     unpadded = unpad(Padded_message, 16).decode('ascii')
     return unpadded
 
-
+# Saves the email to the clients inbox/directory
 def saveEmail(emailTime, destination, username, title):
     fileName = f"{username}_{title}.txt"
     pathfileName = os.path.join(f"./{destination}/", fileName)
@@ -51,17 +50,14 @@ def saveEmail(emailTime, destination, username, title):
     emailFile.write(emailTime)
     emailFile.close()
 
-def sendEmailProtocol(connectionSocket, username, cipher, emailDatabase):
+def sendEmailProtocol(connectionSocket, username, cipher):
     connectionSocket.send(encrypt("Send the email", cipher))
-
     #receive email info
     # email = connectionSocket.recv(2048).decode('ascii')
     emailInfo = decrypt(connectionSocket.recv(2048), cipher)
 
     #parse email info
     lines = emailInfo.split('\n')
-
-    # addToDatabase(lines, date)
 
     for i in range(4):
         tokens = lines[i].split(':')
@@ -99,20 +95,18 @@ def sendEmailProtocol(connectionSocket, username, cipher, emailDatabase):
     else:
         saveEmail(emailTime, destination, username, title)
 
-    # add to emailDatabase dictionary
-    if destination in emailDatabase:
-        emailDatabase[destination].append(emailTime)
-    else:
-        emailDatabase[destination] = [emailTime]
-
     return None
 
+# Looks through client directories to find emails
 def displayInbox(username):
     inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\t\t\tTitle\n"  # Header for inbox list
-
     directory = f"./{username}/"
+    unsortedDirectory = os.listdir(directory)
+
+    sortedDirectory = sorted(unsortedDirectory, key=lambda x: os.path.getmtime(os.path.join(directory, x)))
+
     index = 0
-    for filename in os.listdir(directory):
+    for filename in sortedDirectory:
         if filename.endswith(".txt"):
             index += 1
             file_path = os.path.join(directory, filename)
@@ -127,7 +121,6 @@ def displayInbox(username):
 # Opens connnection to clients and handles email system
 def server():
     # Server port
-    emailDatabase = {}
     serverPort = 13000
     # Create server socket that uses IPv4 and TCP protocols
     try:
@@ -161,7 +154,6 @@ def server():
 
             # If it is a client process
             if pid == 0:
-
                 serverSocket.close()
 
                 sym_key = generate_sym_key()
@@ -185,13 +177,11 @@ def server():
                     return
 
                 menu = 'Select the operation:\n\t1) Create and send an email\n\t2) Display the inbox list\n\t3) Display the email contents\n\t4) Terminate the connection\n\n\tChoice: '
-                #
                 connectionSocket.send(encrypt(menu, cipher))
                 message = decrypt(connectionSocket.recv(1024), cipher)
                 while True:
                     if message == "1":
-                        #print(message, "worked")
-                        sendEmailProtocol(connectionSocket, username, cipher, emailDatabase)
+                        sendEmailProtocol(connectionSocket, username, cipher)
 
                         # -----------
                     if message == "2":
@@ -207,16 +197,16 @@ def server():
                         emailFrom = chosenEmail[3]
                         title = chosenEmail[7]
                         fileName = f"./{username}/{emailFrom}_{title}.txt"
-                        emailContents = ""
                         # opens the text file and grabs email contents
-                        with open(fileName, 'r') as email:
-                            tmp = email.readline()
-                            while tmp:
-                                emailContents += tmp
-                                tmp = email.readline()
+                        file = open(fileName, 'r')
+                        content = file.read()
+                        file.close()
+                        size = len(content)
+                        connectionSocket.send(encrypt(str(size), cipher))
 
-                        connectionSocket.send(encrypt(emailContents, cipher))
-           
+                        for i in range(0, size, 2047):
+                            encrypted = encrypt(str(content[i:i + 2047]), cipher)
+                            connectionSocket.send(encrypted)
 
                     elif message == "4":
                         print(f"Terminating connection with {username}")
