@@ -18,6 +18,7 @@ from Crypto.Hash import SHA1
 def calculate_sha1(message):
     sha1 = SHA1.new()
     sha1.update(message.encode('ascii'))
+
     return sha1.hexdigest()
 
 
@@ -31,7 +32,6 @@ def send_message_with_integrity(socket, message, cipher):
     # Send the encrypted message and the hash
     socket.send(encrypted_message)
     socket.send(hash_value.encode('ascii'))
-
 
 def receive_message_with_integrity(socket, cipher):
     # Receive the encrypted message and the hash
@@ -91,7 +91,7 @@ def saveEmail(emailTime, destination, username, title):
 # ... (existing code)
 
 def sendEmailProtocol(username, clientSocket, cipher):
-    # Receive the message indicating to send an email
+    # Send the message indicating to send an email
     send_message_with_integrity(clientSocket, "Send the email", cipher)
 
     # Receive the email info
@@ -118,6 +118,11 @@ def sendEmailProtocol(username, clientSocket, cipher):
 
     print(f"An email from {username} is sent to {destination} with a content length of {length}")
     title = lines[2].split(" ")[1]
+
+    #content and title length checker
+    if (length > 1000000) or (title > 100):
+        print("Rejected: Maximum Character limit exceeded")
+        return None
 
     # Receive the content
     content = ""
@@ -193,7 +198,8 @@ def server():
         try:
             # Server accepts client connection
             connectionSocket, addr = serverSocket.accept()
-            pid = os.fork()
+            #pid = os.fork()
+            pid = 0
             with open("user_pass.json", 'r') as file:
                 user_pass_dict = json.load(file)
 
@@ -227,7 +233,7 @@ def server():
                 message = decrypt(connectionSocket.recv(1024), cipher)
                 while True:
                     if message == "1":
-                        sendEmailProtocol(connectionSocket, username, cipher)
+                        sendEmailProtocol(username, connectionSocket, cipher)
 
                         # -----------
                     if message == "2":

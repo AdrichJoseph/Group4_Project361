@@ -113,6 +113,7 @@ def sendEmailProtocol(username, clientSocket, cipher):
     print(f"An email from {username} is sent to {destination} with a content length of {length}")
     title = lines[2].split(" ")[1]
 
+
     # Receive the content
     content = ""
     while len(content) < length:
@@ -124,8 +125,6 @@ def sendEmailProtocol(username, clientSocket, cipher):
     print("Email content received. It is not saved on the client side.")
 
     return None
-
-
 
 
 
@@ -161,7 +160,6 @@ def client():
         clientSocket.send(encrypt(clientResponse, cipher))
         while True:
             if clientResponse == "1":
-                #print(clientResponse, "worked")
                 sendEmailProtocol(username, clientSocket, cipher)
 
 
@@ -178,6 +176,7 @@ def client():
                 size = decrypt(clientSocket.recv(2048), cipher)
                 print(size)
                 content = ""
+
                 while (len(content) < int(size)):
                     content += decrypt(clientSocket.recv(2048), cipher)
                 print(content, "\n")
