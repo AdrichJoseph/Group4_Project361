@@ -230,7 +230,6 @@ def server():
                         index = int(decrypt(connectionSocket.recv(1024), cipher))
                         # grabs the chosen email by the user
                         chosenEmail = displayInbox(username).split("\n")[index].split("\t")
-                        print(chosenEmail)
                         emailFrom = chosenEmail[2]
                         title = chosenEmail[5]
                         fileName = f"./{username}/{emailFrom}_{title}.txt"
