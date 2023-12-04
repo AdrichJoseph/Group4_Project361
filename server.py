@@ -134,24 +134,41 @@ def sendEmailProtocol(connectionSocket, username, cipher):
 
 # Looks through client directories to find emails
 def displayInbox(username):
+    # Initialize a string variable to store the formatted inbox information.
+    # This line sets up the headers for the inbox display. 
     inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\t\t\tTitle\n"  # Header for inbox list
-    directory = f"./{username}/"
+    directory = f"./{username}/" # specify the directory to look in for the emails based on the username
+
+    # Specify the directory path where the user's emails are stored.
     unsortedDirectory = os.listdir(directory)
 
+    
+    # Sort the list of files based on the modification time (latest first).
     sortedDirectory = sorted(unsortedDirectory, key=lambda x: os.path.getmtime(os.path.join(directory, x)))
 
-    index = 0
+    index = 0 # Initialize an index variable to keep track of email numbers.
+    
+    # loop through the files in the directory
     for filename in sortedDirectory:
+
+        # Check if the file has a ".txt" extension, indicating it is an email file.
         if filename.endswith(".txt"):
-            index += 1
+            index += 1 #increment
+
+            # Build the full path to the email file.
             file_path = os.path.join(directory, filename)
+
+            # open the email file and read the first 4 lines to get the email information
+            # such as the sender, recipient, date, and title.
             with open(file_path, 'r') as email:
+                # remove the newline character at the end of the line
                 email_from = email.readline().split(" ")[1].replace("\n", "")
                 to = email.readline()
                 date = email.readline().split(": ")[1].replace("\n", "")
                 title = email.readline().split(" ")[1].replace("\n", "")
+                # add the email information to the inbox_list_str variable
                 inbox_list_str += f"{index}\t\t\t{email_from}\t\t{date}\t\t{title}\n"
-    return inbox_list_str
+    return inbox_list_str # return the formatted inbox information
 
 # Opens connnection to clients and handles email system
 def server():
