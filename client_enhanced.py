@@ -85,44 +85,52 @@ def decrypt(socket_recv, cipher):
 
 
 def sendEmailProtocol(username, clientSocket, cipher):
-    # Receive the message indicating to send an email
-    send_message_with_integrity(clientSocket, "Send the email", cipher)
+    send_the_email_string = receive_message_with_integrity(clientSocket, cipher)
 
-    # Receive the email info
-    email_info = receive_message_with_integrity(clientSocket, cipher)
+    destination = input("Enter destinations (separated by ;): ")
 
-    # Parse email info
-    lines = email_info.split('\n')
+    while 1:
+        title = input("Enter title: ")
 
-    destination, length = None, None
+        # title length checker
+        if len(title) <= 100:
+            break
+        else:
+            print("Error: exceeded maximum character limit of 100, please try again:")
 
-    for line in lines[:4]:
-        key, value = line.split(':')
-        key = key.strip()
-        value = value.strip()
+    contentType = input("Would you like to load contents from a file? (Y/N) ")
 
-        if key == "To":
-            destination = value
-        elif key == "Content Length":
-            length = int(value)
+    while 1:
+        # message content from a file
+        if (contentType.upper() == 'Y'):
+            fileName = input("Enter filename: ")
+            file = open(fileName, 'r')
+            content = file.read()
 
-    if destination is None or length is None:
-        print("Invalid email information received. Aborting.")
-        return
+            file.close()
 
-    print(f"An email from {username} is sent to {destination} with a content length of {length}")
-    title = lines[2].split(" ")[1]
+        else:
+            content = input("Enter message contents: ")
 
+        length = len(content)
 
-    # Receive the content
-    content = ""
-    while len(content) < length:
-        content += decrypt(clientSocket.recv(2048), cipher)
+        # Content length check
+        if length <= 1000000:
+            break
+        else:
+            print("Error: exceeded maximum character limit of 1,000,000, please try again:")
 
-    # Add time and date to email
-    email_time = f"{lines[0]}\n{lines[1]}\nTime and Date: {str(datetime.now())}\n{lines[2]}\n{lines[3]}\n{lines[4]}\n{content}"
+    #create email
+    emailInfo = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContents:\n"
+    send_message_with_integrity(clientSocket, emailInfo, cipher)
 
     print("Email content received. It is not saved on the client side.")
+
+    # send content separately
+    for i in range(0, length, 2047):
+        send_message_with_integrity(clientSocket, str(content[i:i + 2047]), cipher)
+
+    print("The message is sent to the server.")
 
     return None
 
