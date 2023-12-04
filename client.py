@@ -109,7 +109,6 @@ def sendEmailProtocol(username, clientSocket, cipher):
 
     #create email
     emailInfo = f"From: {username}\nTo: {destination}\nTitle: {title}\nContent Length: {length}\nContents:\n"
-    # clientSocket.send(email.encode('ascii'))
     clientSocket.send(encrypt(emailInfo, cipher))
 
     #send content separately
