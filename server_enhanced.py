@@ -119,7 +119,7 @@ def sendEmailProtocol(username, clientSocket, cipher):
     title = lines[2].split(" ")[1]
 
     #content and title length checker
-    if (length > 1000000) or (title > 100):
+    if (int(length) > 1000000) or (len(title) > 100):
         print("Rejected: Maximum Character limit exceeded")
         return None
 
