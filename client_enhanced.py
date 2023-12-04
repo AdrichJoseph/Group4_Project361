@@ -161,11 +161,12 @@ def client():
         # check to see if user and pass is accepted by server
         sym_key = decrypt_with_client_key(username, clientSocket.recv(1024), clientSocket)
         cipher = AES.new(sym_key, AES.MODE_ECB)
-        clientSocket.send(encrypt("OK", cipher))
+        send_message_with_integrity(clientSocket, "OK", cipher)
 
-        menu = decrypt(clientSocket.recv(1024), cipher)
+        menu = receive_message_with_integrity(clientSocket, cipher)
         clientResponse = input(menu)
-        clientSocket.send(encrypt(clientResponse, cipher))
+        send_message_with_integrity(clientSocket, clientResponse, cipher)
+
         while True:
             if clientResponse == "1":
                 sendEmailProtocol(username, clientSocket, cipher)
@@ -180,13 +181,15 @@ def client():
             if clientResponse == "3":
                 whichIndexString = decrypt(clientSocket.recv(1024), cipher)
                 index = input(whichIndexString)
-                clientSocket.send(encrypt(index, cipher))
-                size = decrypt(clientSocket.recv(2048), cipher)
+                send_message_with_integrity(clientSocket, index, cipher)
+
+                size = receive_message_with_integrity(clientSocket, cipher)
+
                 print(size)
                 content = ""
 
                 while (len(content) < int(size)):
-                    content += decrypt(clientSocket.recv(2048), cipher)
+                    content += receive_message_with_integrity(clientSocket, cipher)
                 print(content, "\n")
 
             elif clientResponse == "4":
@@ -195,7 +198,7 @@ def client():
 
             # restart the choice loop
             clientResponse = input(menu)
-            clientSocket.send(encrypt(clientResponse, cipher))
+            send_message_with_integrity(clientSocket, clientResponse, cipher)
 
         # Client terminate connection with the server
         clientSocket.close()

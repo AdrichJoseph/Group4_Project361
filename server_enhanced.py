@@ -127,7 +127,7 @@ def sendEmailProtocol(username, clientSocket, cipher):
     # Receive the content
     content = ""
     while len(content) < length:
-        content += decrypt(clientSocket.recv(2048), cipher)
+        content += receive_message_with_integrity(clientSocket, cipher)
 
     # Add time and date to email
     email_time = f"{lines[0]}\n{lines[1]}\nTime and Date: {str(datetime.now())}\n{lines[2]}\n{lines[3]}\n{lines[4]}\n{content}"
@@ -213,11 +213,13 @@ def server():
                 cipher = AES.new(sym_key, AES.MODE_ECB)
                 # decrypt username and password
                 username, passwd = decrypt_user_pass_message(connectionSocket.recv(1024))
+
                 # Check to see if user/pass combo is in json file
                 if username in user_pass_dict and user_pass_dict[username] == passwd:
                     # sending the sym_key encrypted with the client_public.pem
                     connectionSocket.send(encrypt_with_client_public_key(username, sym_key))
-                    ok_message = decrypt(connectionSocket.recv(1024), cipher)
+
+                    ok_message = receive_message_with_integrity(connectionSocket, cipher)
                     print(f"Connection Accepted and Symmetric Key Generated for client: {username}")
 
                 else:
@@ -228,9 +230,13 @@ def server():
                     serverSocket.close()
                     return
 
+                #send menu options
                 menu = 'Select the operation:\n\t1) Create and send an email\n\t2) Display the inbox list\n\t3) Display the email contents\n\t4) Terminate the connection\n\n\tChoice: '
-                connectionSocket.send(encrypt(menu, cipher))
-                message = decrypt(connectionSocket.recv(1024), cipher)
+                send_message_with_integrity(connectionSocket, menu, cipher)
+
+                #recv client choice
+                message = receive_message_with_integrity(connectionSocket, cipher)
+
                 while True:
                     if message == "1":
                         sendEmailProtocol(username, connectionSocket, cipher)
@@ -238,34 +244,35 @@ def server():
                         # -----------
                     if message == "2":
                         inbox_list_str = displayInbox(username)
-                        connectionSocket.send(encrypt(inbox_list_str, cipher))
+                        send_message_with_integrity(connectionSocket, inbox_list_str, cipher)
 
                     if message == "3":
-                        connectionSocket.send(encrypt("Enter the email index you wish to view: ", cipher))
+                        send_message_with_integrity(connectionSocket, "Enter the email index you wish to view: ", cipher)
+
                         # Grabs the index
-                        index = int(decrypt(connectionSocket.recv(1024), cipher))
-                        # grabs the chosen email by the user
+                        index = int(receive_message_with_integrity(connectionSocket, cipher))
+
+                        # grabs the chosen email by the user, parse
                         chosenEmail = displayInbox(username).split("\n")[index].split("\t")
                         emailFrom = chosenEmail[3]
                         title = chosenEmail[7]
                         fileName = f"./{username}/{emailFrom}_{title}.txt"
+
                         # opens the text file and grabs email contents
                         file = open(fileName, 'r')
                         content = file.read()
                         file.close()
                         size = len(content)
-                        connectionSocket.send(encrypt(str(size), cipher))
+                        send_message_with_integrity(connectionSocket, str(size), cipher)
 
                         for i in range(0, size, 2047):
-                            encrypted = encrypt(str(content[i:i + 2047]), cipher)
-                            connectionSocket.send(encrypted)
+                            send_message_with_integrity(connectionSocket, str(content[i:i + 2047]), cipher)
 
                     elif message == "4":
                         print(f"Terminating connection with {username}")
                         break
 
-                    # connectionSocket.send(encrypt(menu, cipher))
-                    message = decrypt(connectionSocket.recv(1024), cipher)
+                    message = receive_message_with_integrity(connectionSocket, cipher)
 
                 # restart the choice loop
                 connectionSocket.close()
