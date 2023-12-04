@@ -88,7 +88,6 @@ def saveEmail(emailTime, destination, username, title):
     emailFile.write(emailTime)
     emailFile.close()
 
-# ... (existing code)
 
 def sendEmailProtocol(username, clientSocket, cipher):
     # Send the message indicating to send an email
