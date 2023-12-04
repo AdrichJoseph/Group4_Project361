@@ -106,7 +106,7 @@ def sendEmailProtocol(connectionSocket, username, cipher):
     print(f"An email from {username} is sent to {destination} has a content length of{length}")
     title = lines[2].split(" ")[1]
 
-    if (length > 1000000) or (title > 100):
+    if (int(length) > 1000000) or (len(title) > 100):
         print("Rejected: Maximum Character limit exceeded")
         return None
 
@@ -134,7 +134,8 @@ def sendEmailProtocol(connectionSocket, username, cipher):
 
 # Looks through client directories to find emails
 def displayInbox(username):
-    inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\t\t\t\tTitle\n"  # Header for inbox list
+    # Header for inbox list
+    inbox_list_str = "Index\t\tFrom\t\tDateTime\t\t\tTitle\n" 
     directory = f"./{username}/"
     unsortedDirectory = os.listdir(directory)
 
@@ -150,7 +151,7 @@ def displayInbox(username):
                 to = email.readline()
                 date = email.readline().split(": ")[1].replace("\n", "")
                 title = email.readline().split(" ")[1].replace("\n", "")
-                inbox_list_str += f"{index}\t\t\t{email_from}\t\t{date}\t\t{title}\n"
+                inbox_list_str += f"{index}\t\t{email_from}\t\t{date}\t{title}\n"
     return inbox_list_str
 
 # Opens connnection to clients and handles email system
@@ -229,8 +230,9 @@ def server():
                         index = int(decrypt(connectionSocket.recv(1024), cipher))
                         # grabs the chosen email by the user
                         chosenEmail = displayInbox(username).split("\n")[index].split("\t")
-                        emailFrom = chosenEmail[3]
-                        title = chosenEmail[7]
+                        print(chosenEmail)
+                        emailFrom = chosenEmail[2]
+                        title = chosenEmail[5]
                         fileName = f"./{username}/{emailFrom}_{title}.txt"
                         # opens the text file and grabs email contents
                         file = open(fileName, 'r')
